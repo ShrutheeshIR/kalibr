@@ -61,10 +61,11 @@ class BagImageDatasetReader(object):
     timestamps = list()
     for idx in self.indices:
       topic, data, stamp = self.bag._read_message(self.index[idx].position)
-      timestamp = data.header.stamp.secs * 1e9 + data.header.stamp.nsecs
+      print(stamp)
+      timestamp = stamp.secs * 1e9 + stamp.nsecs
       timestamps.append(timestamp)
       if self.perform_synchronization:
-        self.timestamp_corrector.correctTimestamp(data.header.stamp.to_sec(),
+        self.timestamp_corrector.correctTimestamp(stamp.to_sec(),
                                                   stamp.to_sec())
 
     sorted_tuples = sorted(zip(timestamps, indices))
@@ -76,7 +77,7 @@ class BagImageDatasetReader(object):
     timestamps = list()
     for idx in self.indices:
       topic, data, stamp = self.bag._read_message(self.index[idx].position)
-      timestamp = data.header.stamp.secs + data.header.stamp.nsecs / 1.0e9
+      timestamp = stamp.secs + stamp.nsecs / 1.0e9
       timestamps.append(timestamp)
 
     bagstart = min(timestamps)
@@ -117,12 +118,13 @@ class BagImageDatasetReader(object):
 
   def getImage(self, idx):
     topic, data, stamp = self.bag._read_message(self.index[idx].position)
+    # print("GETTING IMAGE-----------------", data.encoding)
     if self.perform_synchronization:
       timestamp = acv.Time(self.timestamp_corrector.getLocalTime(
-          data.header.stamp.to_sec()))
+          stamp.to_sec()))
     else:
-      timestamp = acv.Time(data.header.stamp.secs,
-                           data.header.stamp.nsecs)
+      timestamp = acv.Time(stamp.secs,
+                           stamp.nsecs)
     if data._type == 'mv_cameras/ImageSnappyMsg':
       if self.uncompress is None:
         from snappy import uncompress

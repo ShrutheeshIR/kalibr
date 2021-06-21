@@ -5,6 +5,8 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <aslam/cameras/GridCalibrationTargetCheckerboard.hpp>
 #include <sm/eigen/serialization.hpp>
+#include <opencv2/highgui/highgui_c.h>
+#include <opencv2/imgproc/types_c.h>
 
 namespace aslam {
 namespace cameras {
@@ -50,7 +52,7 @@ GridCalibrationTargetCheckerboard::GridCalibrationTargetCheckerboard(
 void GridCalibrationTargetCheckerboard::initialize()
 {
   if (_options.showExtractionVideo) {
-    cv::namedWindow("Checkerboard corners", CV_WINDOW_AUTOSIZE);
+    cv::namedWindow("Checkerboard corners", cv::WINDOW_AUTOSIZE);
     cvStartWindowThread();
   }
 }
@@ -104,14 +106,15 @@ bool GridCalibrationTargetCheckerboard::computeObservation(const cv::Mat & image
   if (_options.showExtractionVideo) {
     //image with refined (blue) and raw corners (red)
     cv::Mat imageCopy1 = image.clone();
-    cv::cvtColor(imageCopy1, imageCopy1, CV_GRAY2RGB);
+    if(imageCopy1.channels() > 1)
+      cv::cvtColor(imageCopy1, imageCopy1, cv::COLOR_BGR2GRAY);
     cv::drawChessboardCorners(imageCopy1, cv::Size(rows(), cols()), centers,
                               true);
 
     // write error msg
     if (!success)
       cv::putText(imageCopy1, "Detection failed! (frame not used)",
-                  cv::Point(50, 50), CV_FONT_HERSHEY_SIMPLEX, 0.8,
+                  cv::Point(50, 50), cv::FONT_HERSHEY_SIMPLEX, 0.8,
                   CV_RGB(255,0,0), 3, 8, false);
 
     cv::imshow("Checkerboard corners", imageCopy1);  // OpenCV call

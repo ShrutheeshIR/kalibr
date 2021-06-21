@@ -17,7 +17,7 @@ def multicoreExtractionWrapper(detector, taskq, resultq, clearImages, noTransfor
         idx = task[0]
         stamp = task[1]
         image = task[2]
-        
+         
         if noTransformation:
             success, obs = detector.findTargetNoTransformation(stamp, np.array(image))
         else:
@@ -86,6 +86,7 @@ def extractCornersFromDataset(dataset, detector, multithreading=False, numProces
     else:
         for timestamp, image in dataset.readDataset():
             if noTransformation:
+                # print(np.array(image).dtype)
                 success, observation = detector.findTargetNoTransformation(timestamp, np.array(image))
             else:
                 success, observation = detector.findTarget(timestamp, np.array(image))

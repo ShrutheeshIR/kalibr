@@ -160,10 +160,10 @@ if __name__ == "__main__":
     
     parser.add_argument('--type', dest='gridType', default='apriltag', help='The grid pattern type. (\'apriltag\' or \'checkerboard\') (default: %(default)s)')
     
-    parser.add_argument('--nx', type=int, default=6, dest='n_cols', help='The number of tags in x direction (default: %(default)s)\n')
-    parser.add_argument('--ny', type=int, default=7, dest='n_rows', help='The number of tags in y direction (default: %(default)s)')
+    parser.add_argument('--nx', type=int, default=7, dest='n_cols', help='The number of tags in x direction (default: %(default)s)\n')
+    parser.add_argument('--ny', type=int, default=5, dest='n_rows', help='The number of tags in y direction (default: %(default)s)')
     
-    parser.add_argument('--tsize', type=float, default=0.02, dest='tsize', help='The size of one tag [m] (default: %(default)s)')
+    parser.add_argument('--tsize', type=float, default=0.1, dest='tsize', help='The size of one tag [m] (default: %(default)s)')
     parser.add_argument('--tspace', type=float, default=0.25, dest='tagspacing', help='The space between the tags in fraction of the edge size [0..1] (default: %(default)s)')
     parser.add_argument('--tfam', default='t36h11', dest='tagfamiliy', help='Familiy of April tags {0} (default: %(default)s)'.format(AprilTagCodes.TagFamilies.keys())) 
     

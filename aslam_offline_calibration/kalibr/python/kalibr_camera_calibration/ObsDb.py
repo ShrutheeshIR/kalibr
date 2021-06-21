@@ -40,6 +40,7 @@ class ObservationDatabase(object):
         #find the nearest timestamp in the table
         timestamps_table = self.targetViews.keys()
         timestamp_obs = obs.time().toSec()
+        # print()
         
         #check if the table is still empty (initialization)
         if not timestamps_table:
@@ -47,7 +48,7 @@ class ObservationDatabase(object):
             nearest_timestamp = timestamp_obs + 5*(self.max_delta_approxsync+1)
         else:
             nearest_timestamp = min(timestamps_table, key=lambda x: abs(x-timestamp_obs))    
-            
+        print(timestamp_obs, nearest_timestamp)  
         #if +-max approx. sync add to this time instant otherwise create a new timestamp)
         if abs(nearest_timestamp-timestamp_obs) <= self.max_delta_approxsync:
             #add to existing timestamp

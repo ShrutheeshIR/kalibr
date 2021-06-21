@@ -50,7 +50,7 @@ class CameraGeometry(object):
         self.dv.projectionDesignVariable().setActive(projectionActive)
         self.dv.distortionDesignVariable().setActive(distortionActive)
         self.dv.shutterDesignVariable().setActive(shutterActice)
-
+ 
     def initGeometryFromObservations(self, observations):
         #obtain focal length guess
         success = self.geometry.initializeIntrinsics(observations)

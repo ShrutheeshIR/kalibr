@@ -8,6 +8,8 @@
 #include <sm/assert_macros.hpp>
 #include <sm/logging.hpp>
 #include <aslam/cameras/GridCalibrationTargetAprilgrid.hpp>
+#include <opencv2/highgui/highgui_c.h>
+#include <opencv2/imgproc/types_c.h>
 
 namespace aslam {
 namespace cameras {
@@ -103,6 +105,8 @@ bool GridCalibrationTargetAprilgrid::computeObservation(
   // detect the tags
   std::vector<AprilTags::TagDetection> detections = _tagDetector->extractTags(image);
 
+  // std::cout <<<<"TAG EXTRACTED ! " << std::endl;
+
   /* handle the case in which a tag is identified but not all tag
    * corners are in the image (all data bits in image but border
    * outside). tagCorners should still be okay as apriltag-lib
@@ -167,7 +171,7 @@ bool GridCalibrationTargetAprilgrid::computeObservation(
         cvStartWindowThread();
 
         cv::Mat imageCopy = image.clone();
-        cv::cvtColor(imageCopy, imageCopy, CV_GRAY2RGB);
+        cv::cvtColor(imageCopy, imageCopy, cv::COLOR_BGR2GRAY);
 
         //mark all duplicate tags in image
         for (int j = 0; i < detections.size() - 1; i++) {
@@ -178,10 +182,10 @@ bool GridCalibrationTargetAprilgrid::computeObservation(
         }
 
         cv::putText(imageCopy, "Duplicate Apriltags detected. Hide them.",
-                    cv::Point(50, 50), CV_FONT_HERSHEY_SIMPLEX, 0.8,
+                    cv::Point(50, 50), cv::FONT_HERSHEY_SIMPLEX, 0.8,
                     CV_RGB(255,0,0), 2, 8, false);
         cv::putText(imageCopy, "Press enter to exit...", cv::Point(50, 80),
-                    CV_FONT_HERSHEY_SIMPLEX, 0.8, CV_RGB(255,0,0), 2, 8, false);
+                    cv::FONT_HERSHEY_SIMPLEX, 0.8, CV_RGB(255,0,0), 2, 8, false);
         cv::imshow("Duplicate Apriltags detected. Hide them", imageCopy);  // OpenCV call
 
         // and exit
@@ -192,6 +196,7 @@ bool GridCalibrationTargetAprilgrid::computeObservation(
       }
   }
 
+  // std::cout <<<<"Processed Tags ! " << std::endl;
   // convert corners to cv::Mat (4 consecutive corners form one tag)
   /// point ordering here
   ///          11-----10  15-----14
@@ -213,16 +218,21 @@ bool GridCalibrationTargetAprilgrid::computeObservation(
   //store a copy of the corner list before subpix refinement
   cv::Mat tagCornersRaw = tagCorners.clone();
 
+  // std::cout <<<<"GOING TO SUBPIX REFINE ! " << std::endl;
   //optional subpixel refinement on all tag corners (four corners each tag)
   if (_options.doSubpixRefinement && success)
     cv::cornerSubPix(
         image, tagCorners, cv::Size(2, 2), cv::Size(-1, -1),
         cv::TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
 
+  // std::cout <<<<"DONE SUBPIX REFINED ! " << std::endl;  
   if (_options.showExtractionVideo) {
     //image with refined (blue) and raw corners (red)
     cv::Mat imageCopy1 = image.clone();
-    cv::cvtColor(imageCopy1, imageCopy1, CV_GRAY2RGB);
+    if(imageCopy1.channels() > 1)
+      cv::cvtColor(imageCopy1, imageCopy1, cv::COLOR_BGR2GRAY);
+    // std::cout <<"DONE GRAYSCALING ! " << std::endl;  
+
     for (unsigned i = 0; i < detections.size(); i++)
       for (unsigned j = 0; j < 4; j++) {
         //raw apriltag corners
@@ -237,26 +247,31 @@ bool GridCalibrationTargetAprilgrid::computeObservation(
 
         if (!success)
           cv::putText(imageCopy1, "Detection failed! (frame not used)",
-                      cv::Point(50, 50), CV_FONT_HERSHEY_SIMPLEX, 0.8,
+                      cv::Point(50, 50), cv::FONT_HERSHEY_SIMPLEX, 0.8,
                       CV_RGB(255,0,0), 3, 8, false);
       }
+    // std::cout <<"GOING TO SHOW FIRST IMAGE ! " << std::endl;  
 
     cv::imshow("Aprilgrid: Tag corners", imageCopy1);  // OpenCV call
     cv::waitKey(1);
 
+  // std::cout <<"GOING TO MODIFY ! " << std::endl;
     /* copy image for modification */
     cv::Mat imageCopy2 = image.clone();
-    cv::cvtColor(imageCopy2, imageCopy2, CV_GRAY2RGB);
+    if(imageCopy2.channels() > 1)
+      cv::cvtColor(imageCopy2, imageCopy2, cv::COLOR_BGR2GRAY);
     /* highlight detected tags in image */
     for (unsigned i = 0; i < detections.size(); i++) {
       detections[i].draw(imageCopy2);
 
       if (!success)
         cv::putText(imageCopy2, "Detection failed! (frame not used)",
-                    cv::Point(50, 50), CV_FONT_HERSHEY_SIMPLEX, 0.8,
+                    cv::Point(50, 50), cv::FONT_HERSHEY_SIMPLEX, 0.8,
                     CV_RGB(255,0,0), 3, 8, false);
     }
 
+    // std::cout <<<<"GOING TO SHOW ! " << std::endl;
+    
     cv::imshow("Aprilgrid: Tag detection", imageCopy2);  // OpenCV call
     cv::waitKey(1);
 
@@ -265,6 +280,7 @@ bool GridCalibrationTargetAprilgrid::computeObservation(
       return success;
   }
 
+  // std::cout <<<<"GOING TO INSERT OBSERVED POINTS ! " << std::endl;
   //insert the observed points into the correct location of the grid point array
   /// point ordering
   ///          12-----13  14-----15
@@ -274,6 +290,7 @@ bool GridCalibrationTargetAprilgrid::computeObservation(
   ///    y     | TAG 0 |  | TAG 1 |
   ///   ^      0-------1  2-------3
   ///   |-->x
+
 
   outCornerObserved.resize(size(), false);
   outImagePoints.resize(size(), 2);
@@ -316,6 +333,7 @@ bool GridCalibrationTargetAprilgrid::computeObservation(
     }
   }
 
+  // std::cout <<<<"DONE APRIL ! " << std::endl;
   //succesful observation
   return success;
 }

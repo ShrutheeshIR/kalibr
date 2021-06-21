@@ -24,7 +24,7 @@
 
 #include "apriltags/TagDetector.h"
 
-//#define DEBUG_APRIL
+// #define DEBUG_APRIL 0
 
 #ifdef DEBUG_APRIL
 #include <opencv/cv.h>
@@ -36,6 +36,8 @@ using namespace std;
 namespace AprilTags {
 
   std::vector<TagDetection> TagDetector::extractTags(const cv::Mat& image) {
+
+    // std::cout<<"EXTRACTING TAGS!";
 
     // convert to internal AprilTags image (todo: slow, change internally to OpenCV)
     int width = image.cols;
@@ -51,7 +53,7 @@ namespace AprilTags {
     std::pair<int,int> opticalCenter(width/2, height/2);
 
 #ifdef DEBUG_APRIL
-#if 0
+#if 1
   { // debug - write
     int height_ = fimOrig.getHeight();
     int width_  = fimOrig.getWidth();
@@ -124,6 +126,7 @@ namespace AprilTags {
     fim.filterFactoredCentered(filt, filt);
   }
 
+  // std::cout <<"Step 1 done" << std::endl;
   //================================================================
   // Step two: Compute the local gradient. We store the direction and magnitude.
   // This step is quite sensitve to noise, since a few bad theta estimates will
@@ -168,6 +171,7 @@ namespace AprilTags {
   }
 
 #ifdef DEBUG_APRIL
+#if 0
   int height_ = fimSeg.getHeight();
   int width_  = fimSeg.getWidth();
   cv::Mat image(height_, width_, CV_8UC3);
@@ -186,7 +190,10 @@ namespace AprilTags {
       }
     }
   }
+  #endif
 #endif
+
+  // std::cout <<"Step 2 done" << std::endl;
 
   //================================================================
   // Step three. Extract edges by grouping pixels with similar
@@ -236,6 +243,7 @@ namespace AprilTags {
     Edge::mergeEdges(edges,uf,tmin,tmax,mmin,mmax);
   }
           
+  // std::cout <<"Step 3 done" << std::endl;
   //================================================================
   // Step four: Loop over the pixels again, collecting statistics for each cluster.
   // We will soon fit lines (segments) to these points.
@@ -258,6 +266,7 @@ namespace AprilTags {
     }
   }
 
+  // std::cout <<"Step 4 done" << std::endl;
   //================================================================
   // Step five: Loop over the clusters, fitting lines (which we call Segments).
   std::vector<Segment> segments; //used in Step six
@@ -336,6 +345,7 @@ namespace AprilTags {
 #endif
 #endif
 
+  // std::cout <<"Step 5 done" << std::endl;
   // Step six: For each segment, find segments that begin where this segment ends.
   // (We will chain segments together next...) The gridder accelerates the search by
   // building (essentially) a 2D hash table.
@@ -384,7 +394,7 @@ namespace AprilTags {
       parentseg.children.push_back(&child);
     }
   }
-
+  // std::cout <<"Step 6 done" << std::endl;
   //================================================================
   // Step seven: Search all connected segments to see if any form a loop of length 4.
   // Add those to the quads list.
@@ -422,6 +432,7 @@ namespace AprilTags {
   }
 #endif
 
+  // std::cout <<"Step 7 done" << std::endl;
   //================================================================
   // Step eight. Decode the quads. For each quad, we first estimate a
   // threshold color to decide between 0 and 1. Then, we read off the
@@ -535,6 +546,7 @@ namespace AprilTags {
   }
 #endif
 
+  // // std::cout <<"Step 8 done" << std::endl;
   //================================================================
   //Step nine: Some quads may be detected more than once, due to
   //partial occlusion and our aggressive attempts to recover from
@@ -576,6 +588,8 @@ namespace AprilTags {
        goodDetections.push_back(thisTagDetection);
 
   }
+
+  // // std::cout <<"ALL DONE!!\n" << std::endl;
 
   //cout << "AprilTags: edges=" << nEdges << " clusters=" << clusters.size() << " segments=" << segments.size()
   //     << " quads=" << quads.size() << " detections=" << detections.size() << " unique tags=" << goodDetections.size() << endl;
